@@ -15,7 +15,7 @@ import {
 } from '../config/s3';
 import { log } from 'console';
 import Screenshot from '../models/screenshot.model';
-
+import { authMiddleware } from '../middlewares/auth.middleware';
 // Define interface to extend Express Request
 interface MulterRequest extends Request {
     file?: Express.Multer.File;
@@ -33,7 +33,7 @@ class ScreenshotController extends Controller {
     }
     
     private initRoutes() {
-        this.router.post('/upload', upload.single('screenshot'), this.screenshotUpload);
+        this.router.post('/upload',authMiddleware, upload.single('screenshot'), this.screenshotUpload);
     }
 
     private screenshotUpload = async (req: MulterRequest, res: Response): Promise<void> => {

@@ -4,6 +4,7 @@ import Token from '../../models/token.model';
 import { Op } from 'sequelize';
 import { TokenType, IToken } from '../../types/token';
 import {JWT_ACCESS_TOKEN_SECRET} from '../../config/'
+
 // Define decoded token interface
 interface DecodedToken {
   user_id: number;
@@ -36,15 +37,9 @@ class TokenService {
       throw new Error('Invalid user data for token generation');
     }
 
-    // Use the correct typing for jwt.sign
     const payload = { user_id: user.id, email: user.email };
-    const token =  jwt.sign(
-        payload,
-        this.secret as jwt.Secret,
-        { expiresIn: '15m' }
-      );
-      return token;
- 
+    // Fix the typing issue with jwt.sign
+    return jwt.sign(payload, this.secret, { expiresIn: '15m' });
   }
 
   /**
@@ -58,15 +53,11 @@ class TokenService {
     }
 
     const expires = new Date();
-    expires.setDate(expires.getDate() + 7);
+    expires.setDate(expires.getDate() + 7); // 7 days from now
 
-    // Use the correct typing for jwt.sign
     const payload = { user_id: user.id, email: user.email };
-    const token =  jwt.sign(
-        payload,
-        this.secret as jwt.Secret,
-        { expiresIn: '15m' }
-      );
+    // Fix the typing issue with jwt.sign
+    const token = jwt.sign(payload, this.secret, { expiresIn:  '7d'});
 
     return {
       token,
@@ -81,7 +72,8 @@ class TokenService {
    */
   public async verifyToken(token: string): Promise<DecodedToken | null> {
     try {
-      const decoded = jwt.verify(token, this.secret as jwt.Secret) as DecodedToken;
+      // Fix the typing issue with jwt.verify
+      const decoded = jwt.verify(token, this.secret) as DecodedToken;
       return decoded;
     } catch (error) {
       return null;
@@ -95,12 +87,22 @@ class TokenService {
    */
   public async refreshAccessToken(refreshToken: string): Promise<string | null> {
     try {
-      // Verify the refresh token is valid
-      const decoded = jwt.verify(refreshToken, this.secret as jwt.Secret) as DecodedToken;
+      // First try to verify the JWT without database check
+      // This is fast and will catch expired/invalid tokens immediately
+      let decoded: DecodedToken;
+      try {
+        decoded =  jwt.verify(refreshToken, this.secret) as DecodedToken;
+        
+      } catch (jwtError) {
+        console.error("JWT verification failed:", jwtError);
+        return null;
+      }
       
-      // Check if token exists and is not revoked in database
+      // Only if JWT verification passes, check the database
+      // This reduces unnecessary database queries for invalid tokens
       const tokenRecord = await this.getRefreshToken(refreshToken);
       if (!tokenRecord) {
+        console.log("Token not found in database or revoked");
         return null;
       }
       
@@ -110,13 +112,10 @@ class TokenService {
         email: decoded.email
       };
       
-      // Use the correct typing for jwt.sign
-      return  jwt.sign(
-        payload,
-        this.secret as jwt.Secret,
-        { expiresIn: '15m' }
-      );
+      // Generate new access token
+      return jwt.sign(payload, this.secret, { expiresIn: '15m' });
     } catch (error) {
+      console.error("Error refreshing token:", error);
       return null;
     }
   }
@@ -173,9 +172,7 @@ class TokenService {
    * @param token The token string to revoke
    * @returns A promise that resolves to the number of tokens updated
    */
-  public async revokeToken(token:string): Promise<[number, Token[]]> {
-    console.log(token);
-    
+  public async revokeToken(token: string): Promise<[number, Token[]]> {
     try {
       return await Token.update(
         { is_revoked: true }, 
@@ -206,6 +203,7 @@ class TokenService {
         }
       });
     } catch (error) {
+      console.error("Error getting refresh token:", error);
       return null;
     }
   }

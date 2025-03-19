@@ -9,7 +9,7 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable('time_counters',
+    await queryInterface.createTable('daily_time_records',
       {
         id:{
           type: Sequelize.BIGINT,
@@ -20,18 +20,23 @@ module.exports = {
             type: Sequelize.BIGINT,
             allowNull: false
         },
-        start_time:{
-            type: Sequelize.DATE,
-            allowNull: false
-        },
-       time_counter:{
-          type: Sequelize.STRING,
+        date: {
+          type: Sequelize.DATE,
           allowNull: false
         },
+        total_seconds:{
+          type:Sequelize.BIGINT,
+          default:0
+        },
+        first_start_time:{
+            type: Sequelize.TIME,
+            allowNull: false
+        },
+      
 
 
-        end_time:{
-          type: Sequelize.DATE,
+        last_end_time:{
+          type: Sequelize.TIME,
           allowNull: true
         },
         created_at: {
@@ -48,7 +53,12 @@ module.exports = {
       }
 
 
-    )
+    );
+    await queryInterface.addConstraint('daily_time_records', {
+      fields: ['user_id', 'date'],
+      type: 'unique',
+      name: 'daily_time_records_user_id_date_unique'
+    });
   },
 
   async down (queryInterface, Sequelize) {
@@ -58,6 +68,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('time_counters')
+    await queryInterface.dropTable('daily_time_records')
   }
 };

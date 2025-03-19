@@ -1,7 +1,7 @@
 import { Model, DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
 import Database from "../database";
 import { IUser } from "../types/user";
-import Timer from "./timer.mode";
+import DailyTimeRecord from '../models/daily-time-record.model'
 import Screenshot from "./screenshot.model";
 
 export class User extends Model implements IUser {
@@ -16,7 +16,7 @@ export class User extends Model implements IUser {
   public updated_at!: Date;
 
 
-  public readonly timers?: Timer[];
+ 
 }
 
 // Get the sequelize instance
@@ -91,7 +91,7 @@ User.init(
   },
   
 );
-User.hasMany(Timer,{
+User.hasMany(DailyTimeRecord,{
   foreignKey: 'user_id',
   as: 'timers'
 })

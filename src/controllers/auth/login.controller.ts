@@ -28,12 +28,12 @@ class LoginController extends Controller {
         const result = await this.authService.loginWithEmailPassword(email, password);
         
         // Set HTTP-only cookie with refresh token
-        res.cookie('refreshToken', result.tokens.refreshToken, {
-            httpOnly: true,
-            secure: NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            path: '/'
-        });
+        // res.cookie('refreshToken', result.tokens.refreshToken, {
+        //     httpOnly: true,
+        //     secure: NODE_ENV === 'production',
+        //     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        //     path: '/'
+        // });
         
         return res.status(httpStatus.OK).json({
             success: true,
@@ -41,14 +41,14 @@ class LoginController extends Controller {
             data: {
                 user: result.user,
                 accessToken: result.tokens.accessToken,
-                refreshToken:result.tokens.refreshToken,
+                refreshToken: result.tokens.refreshToken,
                 expiresAt:result.tokens.expiresAt
             }
         });
     }
     
     private async refreshToken(req: Request, res: Response) {
-        const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+        const refreshToken =  req.body.refreshToken;
         
         if (!refreshToken) {
             return res.status(httpStatus.UNAUTHORIZED).json({
@@ -63,13 +63,14 @@ class LoginController extends Controller {
             success: true,
             message: 'Token refreshed successfully',
             data: {
-                accessToken: result.accessToken
+                accessToken: result.accessToken,
+                refreshToken:refreshToken
             }
         });
     }
     
     private async logout(req: Request, res: Response) {
-        const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+        const refreshToken = req.body.refreshToken;
         
         if (!refreshToken) {
             return res.status(httpStatus.BAD_REQUEST).json({

@@ -67,6 +67,7 @@ export class AuthService {
 
     async refreshToken(refreshToken: string) {
         try {
+            
             const newAccessToken = await this.tokenService.refreshAccessToken(refreshToken);
             
             if (!newAccessToken) {

@@ -483,7 +483,7 @@ class TimerController extends Controller {
 
         // Format segments for hourly blocks display (as in the screenshot)
         const hourlyBlocks = [];
-        for (let hour = 7; hour <= 19; hour++) { // 7 AM to 7 PM
+        for (let hour = 0; hour <= 23; hour++) { // 7 AM to 7 PM
             const hourLabel = hour > 12 ? `${hour-12} PM` : hour === 12 ? '12 PM' : `${hour} AM`;
             
             // Filter segments that fall within this hour
